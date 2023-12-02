@@ -167,151 +167,157 @@ const closestDifferentPixel = (
 //   };
 // }
 
-run(async (br) => {
-  const [image] = br.fileUpload({
-    label: "Choose screenshot",
-  });
-
-  br.write({
-    body: "NOTE: this tool will always try to center screenshot based on background color detection",
-  });
-  // const balance = br.toggle({
-  //   label: "Balance Image",
-  // });
-
-  const padding = br.radio({
-    label: "Padding",
-    options: ["0%", "10%", "20%", "40%"],
-    defaultValue: "10%",
-  });
-
-  const paddingScale = { "10%": 0.1, "0%": 0, "20%": 0.2, "40%": 0.4 }[padding];
-  if (image) {
-    const asset = await Jimp.read(image.filepath);
-    const targetColor = asset.getPixelColor(0, 0);
-    const leftExtreme = moveAndCompare(
-      asset,
-      new Point(0, 0),
-      new Point(0, 1),
-      new Point(0, asset.bitmap.height - 1),
-      new Point(1, 0),
-      targetColor
-    );
-
-    const rightExtreme = moveAndCompare(
-      asset,
-      new Point(asset.bitmap.width - 1, 0),
-      new Point(0, 1),
-      new Point(asset.bitmap.width - 1, asset.bitmap.height - 1),
-      new Point(-1, 0),
-      targetColor
-    );
-
-    const topExtreme = moveAndCompare(
-      asset,
-      new Point(0, 0),
-      new Point(1, 0),
-      new Point(asset.bitmap.width - 1, 0),
-      new Point(0, 1),
-      targetColor
-    );
-
-    const bottomExtreme = moveAndCompare(
-      asset,
-      new Point(0, asset.bitmap.height - 1),
-      new Point(1, 0),
-      new Point(asset.bitmap.width - 1, asset.bitmap.height - 1),
-      new Point(0, -1),
-      targetColor
-    );
-
-    asset.crop(
-      leftExtreme,
-      topExtreme,
-      rightExtreme - leftExtreme,
-      bottomExtreme - topExtreme
-    );
-    const newDimensions = {
-      width: asset.bitmap.width * (1 + paddingScale),
-      height: asset.bitmap.height * (1 + paddingScale),
-    };
-
-    // mask.roun(20);
-    const paddedAsset = await new Jimp(
-      newDimensions.width,
-      newDimensions.height,
-      targetColor
-    );
-    // paddedAsset
-    placeAssetInCenter(paddedAsset, asset);
-    br.write({
-      body: `## Output`,
+run(
+  async (br) => {
+    const [image] = br.fileUpload({
+      label: "Choose screenshot",
     });
-    const paddedAssetBuffer = await paddedAsset.getBufferAsync(Jimp.MIME_PNG);
-    // sharp
-    const roundedAsset = sharp(paddedAssetBuffer)
-      .composite([
-        {
-          input: Buffer.from(
-            `<svg><rect x="0" y="0" width="${
-              paddedAsset.bitmap.width
-            }" height="${
-              paddedAsset.bitmap.height
-            }" rx="${20}" ry="${20}" /></svg>`
-          ),
-          blend: "dest-in",
-        },
-      ])
-      .png();
 
-    // const paddedAssetBase64 = await sharpToBase64(roundedAsset);
-
-    // paddedAsset.getBase64(Jimp.AUTO, (e, res) => {
-    //   // br.write({ body: res });
-    //   br.image({ src: res });
+    br.write({
+      body: "NOTE: this tool will always try to center screenshot based on background color detection",
+    });
+    // const balance = br.toggle({
+    //   label: "Balance Image",
     // });
 
-    // br.write({ body: paddedAssetBase64 });
-    // br.image({ src: paddedAssetBase64 });
+    const padding = br.radio({
+      label: "Padding",
+      options: ["0%", "10%", "20%", "40%"],
+      defaultValue: "10%",
+    });
 
-    const backgroundAssetSize = {
-      width: Math.round(newDimensions.width * (1 + paddingScale)),
-      height: Math.round(newDimensions.height * (1 + paddingScale)),
-    };
+    const paddingScale = { "10%": 0.1, "0%": 0, "20%": 0.2, "40%": 0.4 }[
+      padding
+    ];
+    if (image) {
+      const asset = await Jimp.read(image.filepath);
+      const targetColor = asset.getPixelColor(0, 0);
+      const leftExtreme = moveAndCompare(
+        asset,
+        new Point(0, 0),
+        new Point(0, 1),
+        new Point(0, asset.bitmap.height - 1),
+        new Point(1, 0),
+        targetColor
+      );
 
-    // = sharp("./background.png");
-    // const roundedImageMetadata = await roundedAsset.metadata();
-    const x = Math.round(
-      (backgroundAssetSize.width - (await roundedAsset.metadata()).width) / 2
-    );
-    const y = Math.round(
-      (backgroundAssetSize.height - (await roundedAsset.metadata()).height) / 2
-    );
+      const rightExtreme = moveAndCompare(
+        asset,
+        new Point(asset.bitmap.width - 1, 0),
+        new Point(0, 1),
+        new Point(asset.bitmap.width - 1, asset.bitmap.height - 1),
+        new Point(-1, 0),
+        targetColor
+      );
 
-    const assetWithBackgroundBase64 = await sharpToBase64(
-      sharp("./background.png")
-        .resize({
-          width: backgroundAssetSize.width,
-          height: backgroundAssetSize.height,
-          position: "center",
-        })
+      const topExtreme = moveAndCompare(
+        asset,
+        new Point(0, 0),
+        new Point(1, 0),
+        new Point(asset.bitmap.width - 1, 0),
+        new Point(0, 1),
+        targetColor
+      );
+
+      const bottomExtreme = moveAndCompare(
+        asset,
+        new Point(0, asset.bitmap.height - 1),
+        new Point(1, 0),
+        new Point(asset.bitmap.width - 1, asset.bitmap.height - 1),
+        new Point(0, -1),
+        targetColor
+      );
+
+      asset.crop(
+        leftExtreme,
+        topExtreme,
+        rightExtreme - leftExtreme,
+        bottomExtreme - topExtreme
+      );
+      const newDimensions = {
+        width: asset.bitmap.width * (1 + paddingScale),
+        height: asset.bitmap.height * (1 + paddingScale),
+      };
+
+      // mask.roun(20);
+      const paddedAsset = await new Jimp(
+        newDimensions.width,
+        newDimensions.height,
+        targetColor
+      );
+      // paddedAsset
+      placeAssetInCenter(paddedAsset, asset);
+      br.write({
+        body: `## Output`,
+      });
+      const paddedAssetBuffer = await paddedAsset.getBufferAsync(Jimp.MIME_PNG);
+      // sharp
+      const roundedAsset = sharp(paddedAssetBuffer)
         .composite([
           {
-            input: await roundedAsset.toBuffer(),
-            left: x,
-            top: y,
+            input: Buffer.from(
+              `<svg><rect x="0" y="0" width="${
+                paddedAsset.bitmap.width
+              }" height="${
+                paddedAsset.bitmap.height
+              }" rx="${20}" ry="${20}" /></svg>`
+            ),
+            blend: "dest-in",
           },
         ])
-    );
-    const [col1, col2] = br.columns({ columnCount: 2 });
+        .png();
 
-    col1.image({ src: assetWithBackgroundBase64 });
+      // const paddedAssetBase64 = await sharpToBase64(roundedAsset);
 
-    col2.image({
-      src: await asset.getBase64Async(Jimp.AUTO),
-    });
-  }
-});
+      // paddedAsset.getBase64(Jimp.AUTO, (e, res) => {
+      //   // br.write({ body: res });
+      //   br.image({ src: res });
+      // });
+
+      // br.write({ body: paddedAssetBase64 });
+      // br.image({ src: paddedAssetBase64 });
+
+      const backgroundAssetSize = {
+        width: Math.round(newDimensions.width * (1 + paddingScale)),
+        height: Math.round(newDimensions.height * (1 + paddingScale)),
+      };
+
+      // = sharp("./background.png");
+      // const roundedImageMetadata = await roundedAsset.metadata();
+      const x = Math.round(
+        (backgroundAssetSize.width - (await roundedAsset.metadata()).width) / 2
+      );
+      const y = Math.round(
+        (backgroundAssetSize.height - (await roundedAsset.metadata()).height) /
+          2
+      );
+
+      const assetWithBackgroundBase64 = await sharpToBase64(
+        sharp("./background.png")
+          .resize({
+            width: backgroundAssetSize.width,
+            height: backgroundAssetSize.height,
+            position: "center",
+          })
+          .composite([
+            {
+              input: await roundedAsset.toBuffer(),
+              left: x,
+              top: y,
+            },
+          ])
+      );
+      const [col1, col2] = br.columns({ columnCount: 2 });
+
+      col1.image({ src: assetWithBackgroundBase64 });
+
+      col2.image({
+        src: await asset.getBase64Async(Jimp.AUTO),
+      });
+    }
+  },
+  { port: process.env.PORT ? parseInt(process.env.PORT) : 3333 }
+);
 
 const sharpToBase64 = async (asset: SharpAsset) => {
   return `data:image/png;base64,${(await asset.toBuffer()).toString("base64")}`;
