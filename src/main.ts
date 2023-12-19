@@ -185,7 +185,7 @@ run(
       options: ["0%", "10%", "20%", "40%"],
       defaultValue: "10%",
     });
-
+    const addBg = br.toggle({ defaultValue: true, label: "Add Background" });
     const paddingScale = { "10%": 0.1, "0%": 0, "20%": 0.2, "40%": 0.4 }[
       padding
     ];
@@ -276,24 +276,25 @@ run(
 
       // br.write({ body: paddedAssetBase64 });
       // br.image({ src: paddedAssetBase64 });
+      let finalAsset: sharp.Sharp;
+      if (!addBg) {
+        finalAsset = roundedAsset;
+      } else {
+        const backgroundAssetSize = {
+          width: Math.round(newDimensions.width * (1 + paddingScale)),
+          height: Math.round(newDimensions.height * (1 + paddingScale)),
+        };
+        const x = Math.round(
+          (backgroundAssetSize.width - (await roundedAsset.metadata()).width) /
+            2
+        );
+        const y = Math.round(
+          (backgroundAssetSize.height -
+            (await roundedAsset.metadata()).height) /
+            2
+        );
 
-      const backgroundAssetSize = {
-        width: Math.round(newDimensions.width * (1 + paddingScale)),
-        height: Math.round(newDimensions.height * (1 + paddingScale)),
-      };
-
-      // = sharp("./background.png");
-      // const roundedImageMetadata = await roundedAsset.metadata();
-      const x = Math.round(
-        (backgroundAssetSize.width - (await roundedAsset.metadata()).width) / 2
-      );
-      const y = Math.round(
-        (backgroundAssetSize.height - (await roundedAsset.metadata()).height) /
-          2
-      );
-
-      const assetWithBackgroundBase64 = await sharpToBase64(
-        sharp("./background.png")
+        finalAsset = sharp("./background.png")
           .resize({
             width: backgroundAssetSize.width,
             height: backgroundAssetSize.height,
@@ -305,11 +306,15 @@ run(
               left: x,
               top: y,
             },
-          ])
-      );
+          ]);
+      }
+
+      // = sharp("./background.png");
+      // const roundedImageMetadata = await roundedAsset.metadata();
+
       const [col1, col2] = br.columns({ columnCount: 2 });
 
-      col1.image({ src: assetWithBackgroundBase64 });
+      col1.image({ src: await sharpToBase64(finalAsset) });
 
       col2.image({
         src: await asset.getBase64Async(Jimp.AUTO),
