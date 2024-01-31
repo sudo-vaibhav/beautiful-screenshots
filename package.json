@@ -13,7 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@backroad/backroad": "*",
+    "@backroad/backroad": "1.4.0-alpha.3",
     "jimp": "^0.22.10",
     "sharp": "^0.33.0"
   },

@@ -312,7 +312,7 @@ run(
       // = sharp("./background.png");
       // const roundedImageMetadata = await roundedAsset.metadata();
 
-      const [col1, col2] = br.columns({ columnCount: 2 });
+      const [col1, col2] = br.columns({ columns: 2 });
 
       col1.image({ src: await sharpToBase64(finalAsset) });
 
@@ -321,7 +321,7 @@ run(
       });
     }
   },
-  { port: process.env.PORT ? parseInt(process.env.PORT) : 3333 }
+  { server: { port: process.env.PORT ? parseInt(process.env.PORT) : 3333 } }
 );
 
 const sharpToBase64 = async (asset: SharpAsset) => {
